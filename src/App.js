@@ -5,6 +5,7 @@ import Navbar from './components/navbar';
 import SignIn from './auth/SignIn';
 import SignUp from './auth/SignUp';
 import Home from './Home';
+import TruckerPage from './truckerPage';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path='/truckUser' element={<TruckerPage/>}/>
         </Routes>
       </div>
     </Router>
