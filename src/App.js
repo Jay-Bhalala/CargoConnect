@@ -5,18 +5,19 @@ import Navbar from './components/navbar';
 import SignIn from './auth/SignIn';
 import SignUp from './auth/SignUp';
 import Home from './Home';
-import TruckerPage from './truckerPage';
 
 function App() {
   return (
     <>
     <Router>
+      <div>
+        {/* Your components and routes */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn />} />
-          <Route path='/truckUser' element={<TruckerPage/>}/>
         </Routes>
+      </div>
     </Router>
     </>
   );
