@@ -1,16 +1,32 @@
 from flask import Flask, request, jsonify
 import cv2
 import numpy as np
+import json
 from tensorflow.lite.python.interpreter import Interpreter
 from py3dbp import Packer, Bin, Item
 import plotly.graph_objects as go
-
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 
 packer = Packer()
 
+# Define the truck dimensions (in inches)
+truck_length = 48 * 12
+truck_width = 8.5 * 12
+truck_height = 13.5 * 12
+
+# Paths to the model and labels
+PATH_TO_MODEL = 'detect.tflite'
+PATH_TO_LABELS = 'labelmap.txt'
+min_conf_threshold = 0.5
+
+# Initialize the packing algorithm
+initialize_packer()
+
+
+# Function to perform object detection
 def tflite_detect_image(modelpath, imgpath, lblpath, min_conf=0.5):
     with open(lblpath, 'r') as f:
         labels = [line.strip() for line in f.readlines()]
@@ -47,13 +63,12 @@ def tflite_detect_image(modelpath, imgpath, lblpath, min_conf=0.5):
         cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
         label = '%s: %d%%' % (labels[int(classes[max_index])], int(scores[max_index]*100))
         cv2.putText(image, label, (xmin, ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        plt.show()
         return box_width, box_height
     else:
         print("No detection above the confidence threshold.")
         return None, None
 
+# Function to initialize the packer
 def initialize_packer():
     global packer
     packer = Packer()
@@ -62,12 +77,14 @@ def initialize_packer():
     packer.add_item(Item('BlueBox2', 70, 110, 10, 0))
     packer.pack()
 
+# Function to determine the item based on box dimensions
 def get_item_from_dimensions(box_width, box_height):
     if box_width == 342 and box_height == 413:
         return Item('YellowBox', 30, 22, 8, 0)
     else:
         return Item('YellowBox', 18, 14, 3, 0)
 
+# Function to create a 3D model visualization
 def plotly_3d_box(container_dim, items):
     fig = go.Figure()
     item_colors = {
@@ -91,84 +108,33 @@ def plotly_3d_box(container_dim, items):
         dx, dy, dz = item.width, item.height, item.depth
         color = item_colors.get(item.name, 'blue')
         add_box(x, y, z, dx, dy, dz, color, item.name)
-    fig.show()
+    return fig
 
-truck_length = 48 * 12
-truck_width = 8.5 * 12
-truck_height = 13.5 * 12
-
-def process_image(img_path):
-    # Convert all YellowBoxes to BlueBoxes
-    for item in packer.items:
-        if item.name == 'YellowBox':
-            item.name = 'BlueBox'
-
-    # Detect object and print its dimensions
-    box_width, box_height = tflite_detect_image(PATH_TO_MODEL, img_path, PATH_TO_LABELS, min_conf_threshold)
-
-    # Add the detected object as a yellow box to the packer and repack
-    item_to_add = get_item_from_dimensions(box_width, box_height)
-    packer.add_item(item_to_add)
-    packer.pack()
-
-    # Visualize packed boxes
-    plotly_3d_box((truck_length, truck_width, truck_height), packer.bins[0].items)
-
-# Initial loading of blue boxes
-initialize_packer()
-plotly_3d_box((truck_length, truck_width, truck_height), packer.bins[0].items)
-
-PATH_TO_MODEL = '/content/detect.tflite'
-PATH_TO_LABELS = '/content/labelmap.txt'
-min_conf_threshold = 0.5
-
-truck_length = 48 * 12
-truck_width = 8.5 * 12
-truck_height = 13.5 * 12
-
-
-PATH_TO_MODEL = '/path/to/detect.tflite'
-PATH_TO_LABELS = '/path/to/labelmap.txt'
-min_conf_threshold = 0.5
-
-
-initialize_packer()
-
-
-@app.route('/process_image', methods=['POST'])
+@app.route('/process_image', methods=['GET'])
 def process_api_image():
-    img_path = request.form['img_path']
+    img_path = 'IMG_1797.jpg'  # Replace with the actual path to your image
 
-
-    # Convert all YellowBoxes to BlueBoxes
-    for item in packer.items:
-        if item.name == 'YellowBox':
-            item.name = 'BlueBox'
-
-
-    # Detect object and print its dimensions
+    # Detect object and get its dimensions
     box_width, box_height = tflite_detect_image(PATH_TO_MODEL, img_path, PATH_TO_LABELS, min_conf_threshold)
 
+    if box_width is not None and box_height is not None:
+        # Add the detected object as an item to the packer and repack
+        item_to_add = get_item_from_dimensions(box_width, box_height)
+        packer.add_item(item_to_add)
+        packer.pack()
 
-    # Add the detected object as a yellow box to the packer and repack
-    item_to_add = get_item_from_dimensions(box_width, box_height)
-    packer.add_item(item_to_add)
-    packer.pack()
+        # Create a 3D model visualization
+        fig = plotly_3d_box((truck_length, truck_width, truck_height), packer.bins[0].items)
 
+        # Convert the Plotly figure to a JSON-serializable format
+        fig_dict = fig.to_dict()
+        fig_json = json.dumps(fig_dict)
 
-    # You may need to convert the visualization result into a format that can be returned to React
-    # For now, I'm just returning the detected dimensions
-    result = {
-        "box_width": box_width,
-        "box_height": box_height
-    }
-    return jsonify(result)
-
+        # Return the Plotly 3D model as JSON
+        response_data = {"plotly_3d_model": fig_json}
+        return jsonify(response_data)
+    else:
+        return "No detection above the confidence threshold."
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-

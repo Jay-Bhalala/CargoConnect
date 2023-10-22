@@ -21,6 +21,7 @@ function App() {
             <Route path="/truckUser/:uid" element={<TruckerPage />} />
             <Route path="/cargo-booking" element={<CargoBooking />} />
             <Route path="/cargo-details/:cargoId" element={<CargoDetails />} />
+           
           </Routes>
         </div>
       </Router>
