@@ -15,9 +15,8 @@ function SignUp() {
 
     if (email !== "" && password !== "") {
         createUserWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          history('/truckUser');
-          console.log("SUCCES");
+        .then((user) => {
+          history(`/truckUser/${user.user.uid}`);
       }
         ).catch(e => {
             alert(e)
