@@ -1,3 +1,7 @@
+Contributors: Hardik Singh, Jay Bhalala, Jeremy Chuah
+
+Role: Hardik Singh -> Worked on Object Detection, Plotly configuration, and integration with React app via Flask
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
