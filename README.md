@@ -1,6 +1,8 @@
 Contributors: Hardik Singh, Jay Bhalala, Jeremy Chuah
 
-Role: Hardik Singh -> Worked on Object Detection, Plotly configuration, and integration with React app via Flask
+Roles:
+Hardik Singh -> Worked on Object Detection, Plotly configuration, and integration with React app via Flask
+Jay Bhalala -> Worked on React components and object detection
 
 # Getting Started with Create React App
 
