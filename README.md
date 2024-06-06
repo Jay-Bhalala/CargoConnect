@@ -8,3 +8,5 @@ CargoConnect is built using React for the user interface, supported by a smart-c
 Hardik Singh -> Worked on Object Detection, Plotly configuration, and integration with React app via Flask
 
 Jay Bhalala -> Worked on React components and object detection
+
+Jeremy Chuah -> Worked on react app and creating the flask enviornemnt 
